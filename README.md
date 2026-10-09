@@ -1,47 +1,50 @@
 # TalentRank AI
 
-**AI-powered resume screening and ranking for SDE Intern roles**
+AI-powered resume screening and ranking for SDE Intern roles.
 
-TalentRank AI processes PDF resumes, applies deterministic eligibility checks, scores eligible candidates against a transparent 100-point rubric, and optionally enriches results with public GitHub data and an LLM-assisted analysis.
+TalentRank AI reads PDF resumes, applies deterministic eligibility checks, and scores eligible candidates against a transparent 100-point rubric. It can optionally add public GitHub data and an LLM-assisted analysis on top of the base result.
 
-The goal is to help reviewers identify candidates who can demonstrate both genuine Python engineering and meaningful AI, LLM, RAG, or agentic-system experience. The system provides ranked results and supporting evidence so that a reviewer can inspect the reasoning rather than relying on a score alone.
+The goal is to help a reviewer find candidates who can show both real Python engineering and meaningful experience with AI, LLMs, RAG or agentic systems. The tool returns ranked results with supporting evidence, so the reviewer can inspect the reasoning instead of trusting a score on its own.
 
-> TalentRank AI is a decision-support tool. It should not be used as an automatic hiring decision-maker. Review extracted evidence and candidate context before making a decision.
+> TalentRank AI is a decision-support tool. It should not be used as an automatic hiring decision-maker. Review the extracted evidence and candidate context before making a decision.
 
-## Product Screenshots
+**Author:** Suddhasattwa Das, B.Tech CSE, KIIT University (Roll No. 22052861)
+**Contact:** suddhasattwadas2016@gmail.com | 8617077929
+
+## Screenshots
+
+### Screening setup
+
+The sidebar takes a zip of resumes, the input and output folders, and switches for the optional LLM and GitHub enrichment.
+
+![Screening setup](docs/images/screening-setup.png)
 
 ### Screening dashboard
 
-The dashboard summarizes the batch and provides tabs for eligible, rejected, and failed resumes, along with score and skill filters.
+The dashboard shows the batch summary, tabs for eligible, rejected and failed resumes, a minimum score slider, a skill filter and the ranked candidate list.
 
-![TalentRank AI screening dashboard](docs/images/dashboard.png)
+![Screening dashboard](docs/images/dashboard.png)
 
-### Candidate score and evidence
+### Candidate detail
 
-The candidate detail view shows the overall score, category-level breakdown, project summary, GitHub status, and extracted strengths.
+The detail view shows the overall score, the five category scores, the project summary, the GitHub status and the extracted strengths.
 
-![Candidate detail view](docs/images/candidate-detail.png)
-
-### Screening configuration
-
-The sidebar lets the reviewer configure input and output directories and enable or disable optional LLM and GitHub enrichment.
-
-![Screening configuration](docs/images/screening-setup.png)
+![Candidate detail](docs/images/candidate-detail.png)
 
 ## Key Features
 
-- **PDF resume parsing:** Extracts text from PDF files using PyMuPDF.
-- **Deterministic eligibility checks:** Requires evidence of Python and meaningful AI or agentic project experience. The LLM does not override these hard filters.
-- **Explainable scoring:** Scores eligible candidates out of 100 across five categories and records supporting evidence.
-- **GitHub enrichment:** Optionally checks public GitHub signals such as activity and relevant repositories. A missing profile or API failure should not disqualify a candidate.
-- **Optional LLM enhancement:** Uses Gemini for supported extraction or qualitative analysis, with structured output validation and deterministic fallback.
-- **Batch-level fault tolerance:** A corrupt resume or optional-service failure should not stop the rest of the batch.
-- **Multiple interfaces:** CLI as the core workflow, with Streamlit UI and optional FastAPI endpoints.
-- **Export:** JSON and CSV outputs for review, audit, and further analysis.
+- **PDF resume parsing.** Text is extracted from PDF files with PyMuPDF.
+- **Deterministic eligibility checks.** A candidate needs evidence of Python and of meaningful AI or agentic project work. The LLM never overrides these hard filters.
+- **Explainable scoring.** Eligible candidates are scored out of 100 across five categories, and the supporting evidence is stored with each score.
+- **GitHub enrichment.** Public signals such as activity and relevant repositories can be checked. A missing profile or an API failure does not disqualify anyone.
+- **Optional LLM enhancement.** Gemini is used for supported extraction and qualitative analysis, with structured output validation and a deterministic fallback.
+- **Batch-level fault tolerance.** A corrupt resume or a failing optional service does not stop the rest of the batch.
+- **Multiple interfaces.** The command line is the core workflow, with an optional Streamlit UI and optional FastAPI endpoints.
+- **Export.** Results are written as JSON and CSV for review, audit and further analysis.
 
 ## Architecture
 
-The core screening pipeline is separated from the user interfaces and external services.
+The core screening pipeline is kept separate from the user interfaces and from external services.
 
 ```mermaid
 flowchart TD
@@ -64,18 +67,18 @@ flowchart TD
     L --> O[Optional FastAPI]
 ```
 
-### Module responsibilities
+### Modules
 
 | Module | Responsibility |
 | --- | --- |
 | `src/parser.py` | Extracts text from PDF files and handles file-level parsing errors. |
-| `src/extractor.py` | Extracts candidate details, skills, project information, and GitHub references. |
-| `src/eligibility.py` | Applies deterministic Python and AI/agentic evidence checks. |
-| `src/scorer.py` | Calculates category scores, applies justified penalties, and retains evidence. |
+| `src/extractor.py` | Extracts candidate details, skills, project information and GitHub references. |
+| `src/eligibility.py` | Applies the deterministic Python and AI/agentic evidence checks. |
+| `src/scorer.py` | Calculates category scores, applies justified penalties and keeps the evidence. |
 | `src/github_client.py` | Retrieves supported public GitHub signals when enrichment is enabled. |
 | `src/llm_service.py` | Provides optional LLM-assisted analysis and validates structured responses. |
-| `src/pipeline.py` | Coordinates parsing, eligibility, scoring, enrichment, ranking, and exports. |
-| `src/models.py` | Defines structured data models used across the pipeline. |
+| `src/pipeline.py` | Coordinates parsing, eligibility, scoring, enrichment, ranking and exports. |
+| `src/models.py` | Defines the structured data models used across the pipeline. |
 | `config.py` | Centralizes configuration and scoring thresholds. |
 | `main.py` | CLI entry point. |
 | `app.py` | Optional Streamlit interface. |
@@ -83,151 +86,158 @@ flowchart TD
 
 ## Eligibility Rules
 
-A candidate is eligible only when the resume contains evidence for both requirements:
+A candidate is eligible only when the resume shows evidence for both of these:
 
-1. **Python:** Evidence of Python use in a project, internship, work experience, or comparable engineering work.
-2. **AI/agentic systems:** Meaningful experience with AI, LLMs, RAG, embeddings, tool calling, agent orchestration, multi-agent workflows, or evaluation pipelines.
+1. **Python.** Use of Python in a project, internship, work experience or comparable engineering work.
+2. **AI or agentic systems.** Meaningful experience with AI, LLMs, RAG, embeddings, tool calling, agent orchestration, multi-agent workflows or evaluation pipelines.
 
-A technology appearing only in a skills list should not automatically be treated as proof of project depth. The evidence should be checked in context. Candidates who do not meet the hard requirements are listed as rejected with explicit reasons.
+A technology that appears only in a skills list is not accepted as proof of depth. The surrounding context is checked. Candidates who fail a requirement are listed as rejected with explicit reasons.
 
 ## Scoring Rubric
 
 Eligible candidates are scored out of 100 points.
 
-| Category | Maximum | Evidence considered |
+| Category | Max | Evidence considered |
 | --- | ---: | --- |
-| AI / Agentic / RAG project depth | 40 | Project ownership and depth in agents, retrieval, RAG, orchestration, tool use, state, and evaluation. |
-| Python and backend engineering | 30 | Python implementation in projects or experience, APIs, backend services, and related engineering practices. |
-| Cloud, deployment, and full stack | 15 | Docker, cloud deployment, CI/CD, and end-to-end application delivery. |
+| AI / Agentic / RAG project depth | 40 | Project ownership and depth in agents, retrieval, RAG, orchestration, tool use, state and evaluation. |
+| Python and backend engineering | 30 | Python implementation in projects or experience, APIs, backend services and related practices. |
+| Cloud, deployment and full stack | 15 | Docker, cloud deployment, CI/CD and end-to-end application delivery. |
 | GitHub activity | 10 | Recent public activity and maintained, relevant repositories. |
-| Engineering depth | 5 | Testing, architecture, caching, queues, observability, and concurrency. |
+| Engineering depth | 5 | Testing, architecture, caching, queues, observability and concurrency. |
 | **Total** | **100** | |
 
-A 5 to 15 point penalty may be applied to shallow AI wrappers or tutorial projects when the evidence supports it. Penalties should be explained, applied once, and reflected consistently in the final score. Missing GitHub data must not be treated as proof of weak engineering.
+A penalty of 5 to 15 points may be applied to shallow AI wrappers or tutorial projects when the evidence supports it. It is explained, applied once and reflected consistently in the final score. Missing GitHub data is never treated as proof of weak engineering.
 
 ## Technology Stack
 
-- **Language:** Python 3.11+
-- **PDF extraction:** PyMuPDF
-- **Data validation:** Pydantic
-- **LLM integration:** Gemini, optional
-- **GitHub enrichment:** GitHub REST API, optional
-- **Interface:** Streamlit, optional
-- **API:** FastAPI, optional
-- **Testing:** pytest
-- **Output:** JSON and CSV
+- Language: Python 3.11+
+- PDF extraction: PyMuPDF
+- Data validation: Pydantic
+- LLM integration: Gemini (optional)
+- GitHub enrichment: GitHub REST API (optional)
+- Interface: Streamlit (optional)
+- API: FastAPI (optional)
+- Testing: pytest
+- Output: JSON and CSV
 
-The exact installed dependencies are defined in `requirements.txt`.
+Exact dependency versions are listed in `requirements.txt`.
 
 ## Project Structure
 
 ```text
 resume-screening/
-├── resumes/                  # Input PDF resumes
-├── src/
-│   ├── models.py              # Pydantic models
-│   ├── parser.py              # PDF text extraction
-│   ├── extractor.py           # Candidate information extraction
-│   ├── eligibility.py         # Deterministic hard filters
-│   ├── scorer.py               # Scoring and penalties
-│   ├── github_client.py        # Optional GitHub enrichment
-│   ├── llm_service.py          # Optional Gemini integration
-│   └── pipeline.py             # End-to-end orchestration
-├── tests/
-│   ├── test_eligibility.py
-│   ├── test_scoring.py
-│   └── test_parser.py
-├── docs/
-│   └── images/                 # README screenshots
-├── api.py                      # Optional FastAPI app
-├── app.py                      # Optional Streamlit app
-├── main.py                     # CLI entry point
-├── config.py                   # Configuration
-├── requirements.txt
-├── .env.example
-└── README.md
+|-- resumes/                 input PDF resumes
+|-- src/
+|   |-- models.py            Pydantic models
+|   |-- parser.py            PDF text extraction
+|   |-- extractor.py         candidate information extraction
+|   |-- eligibility.py       deterministic hard filters
+|   |-- scorer.py            scoring and penalties
+|   |-- github_client.py     optional GitHub enrichment
+|   |-- llm_service.py       optional Gemini integration
+|   `-- pipeline.py          end-to-end orchestration
+|-- tests/
+|   |-- test_eligibility.py
+|   |-- test_scoring.py
+|   `-- test_parser.py
+|-- docs/
+|   `-- images/              README screenshots
+|-- api.py                   optional FastAPI app
+|-- app.py                   optional Streamlit app
+|-- main.py                  CLI entry point
+|-- config.py                configuration
+|-- requirements.txt
+|-- .env.example
+`-- README.md
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.11 or later
-- PDF resumes in an input directory
-- API keys only if you want to enable the corresponding optional integrations
+- Python 3.11 or later and Git
+- A folder of PDF resumes
+- A Gemini API key and a GitHub token, only if you want those optional features
 
 ### Installation
 
 ```bash
 git clone <repository-url>
 cd resume-screening
-
 python -m venv .venv
 ```
 
-Activate the virtual environment:
+Activate the virtual environment.
 
-**Windows PowerShell**
+Windows PowerShell:
+
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation for the current terminal session, run:
+If PowerShell blocks the script for the current session, allow it for this terminal only and activate again:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
 ```
 
-**macOS or Linux**
+macOS or Linux:
+
 ```bash
 source .venv/bin/activate
 ```
 
-Install dependencies:
+Install the dependencies:
 
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Create a local environment file if the project uses optional API integrations:
+### Environment variables (optional)
 
-**Windows PowerShell**
+Copy the example file and add keys for the integrations you want. The core pipeline runs without any of them.
+
 ```powershell
 Copy-Item .env.example .env
 ```
 
-**macOS or Linux**
 ```bash
 cp .env.example .env
 ```
 
-Add the relevant API keys to `.env`. Never commit `.env` or publish access tokens.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `GITHUB_TOKEN` | No | Authenticates GitHub API requests and can raise the rate limit. |
+| `GEMINI_API_KEY` | No | Enables Gemini-based enhancement. |
+| `LLM_MODEL` | No | Selects the configured Gemini model. |
 
-## Running the Application
+Never commit `.env` or publish access tokens. Scoring weights and thresholds are set in `config.py`.
+
+## Usage
 
 ### Command line
 
-Run screening against a directory of PDF resumes:
+Place the PDF resumes in `resumes/` and run:
 
 ```bash
 python main.py --input ./resumes --output ./output
 ```
 
-Disable optional integrations:
+Without the optional integrations:
 
 ```bash
 python main.py --input ./resumes --output ./output --no-llm --no-github
 ```
 
-Enable verbose logs:
+With verbose logs:
 
 ```bash
 python main.py --input ./resumes --output ./output -v
 ```
 
-Use `python main.py --help` to confirm the options supported by your current checkout.
+Run `python main.py --help` to confirm the options in your checkout.
 
 ### Streamlit interface
 
@@ -235,17 +245,15 @@ Use `python main.py --help` to confirm the options supported by your current che
 streamlit run app.py
 ```
 
-Enter the input and output directories, select optional integrations, and start screening from the interface.
+Upload a zip of resumes or enter the input and output folders, choose the optional integrations and click Run Screening.
 
 ### FastAPI interface
 
-If the optional API module is included in your checkout:
+If `api.py` is present in your checkout:
 
 ```bash
 uvicorn api:app --reload
 ```
-
-The documented endpoints are:
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -253,49 +261,11 @@ The documented endpoints are:
 | `POST /screen` | Start a screening run. |
 | `GET /results` | Retrieve the latest results. |
 
-Confirm the request schema and endpoint behavior in `api.py`, since they depend on the current implementation.
-
-## Configuration
-
-Configuration is managed through `config.py` and environment variables.
-
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `GITHUB_TOKEN` | No | Authenticates GitHub API requests and can increase rate limits. |
-| `GEMINI_API_KEY` | No | Enables Gemini-based enhancement. |
-| `LLM_MODEL` | No | Selects the configured Gemini model. |
-
-Example scoring weights:
-
-```python
-scoring_weights = {
-    "ai_project_depth": 40,
-    "python_backend": 30,
-    "cloud_fullstack": 15,
-    "github": 10,
-    "engineering_depth": 5,
-}
-```
-
-Keep the weights aligned with the scoring implementation and test that category scores sum to the pre-penalty total.
+The request schema depends on the current code in `api.py`.
 
 ## Output
 
-The default output directory is `./output`. The pipeline is designed to export JSON and CSV results.
-
-### JSON
-
-The JSON report should include:
-
-- Batch summary: discovered, parsed, eligible, rejected, and failed counts
-- Candidate identity and eligibility status
-- Rank and final score
-- Category-level score breakdown
-- Evidence snippets, matched skills, strengths, and concerns
-- GitHub enrichment status
-- Rejection reasons for candidates who do not meet eligibility rules
-
-Example structure:
+Reports are written to `./output` as JSON and CSV. The JSON report holds the batch summary, each candidate's rank, final score, category breakdown, evidence, matched skills, GitHub status and any rejection reasons. The CSV is a flattened version for spreadsheet review.
 
 ```json
 {
@@ -328,76 +298,52 @@ Example structure:
 }
 ```
 
-This is an illustrative schema, not a guarantee that every optional field is present in every run. Check the actual output model in `src/models.py`.
-
-### CSV
-
-The CSV export provides a flattened view of candidate scores and screening outcomes for spreadsheet review.
+This schema is illustrative, and optional fields may be missing in a given run. The real output model is in `src/models.py`.
 
 ## Testing
 
-Run the test suite:
-
 ```bash
 pytest
-```
-
-Run specific test modules:
-
-```bash
 pytest tests/test_eligibility.py -v
 pytest tests/test_scoring.py -v
 pytest tests/test_parser.py -v
-```
-
-If coverage is configured:
-
-```bash
 pytest --cov=src --cov-report=html
 ```
 
-Important regression tests should verify that:
+The last command applies only if coverage is configured. The tests should check that:
 
 - Missing or invalid PDFs do not stop the batch.
-- Eligibility requires both Python and meaningful AI/agentic evidence.
+- Eligibility requires both Python and meaningful AI or agentic evidence.
 - Category scores respect their maximums.
-- The final score equals the sum of category scores minus any applicable penalty, bounded to 0 through 100.
+- The final score equals the category total minus any penalty, bounded between 0 and 100.
 - Eligible candidates are sorted by descending final score and ranks are reassigned after sorting.
-- Missing GitHub profiles or API errors do not create a screening failure or an unsupported penalty.
-- Extracted names, skills, summaries, and evidence are grounded in the resume text.
+- Missing GitHub profiles or API errors cause no failure and no unsupported penalty.
+- Extracted names, skills, summaries and evidence are grounded in the resume text.
 
 ## Reliability and Responsible Use
 
-- **Keep eligibility deterministic:** LLM output must not override hard eligibility rules.
-- **Validate structured responses:** Reject malformed LLM output and fall back safely.
-- **Isolate failures:** Record per-resume failures and continue processing the remaining batch.
-- **Make scoring auditable:** Store category scores, penalties, and evidence separately.
-- **Treat GitHub as optional:** Missing, private, or inaccessible profiles should not automatically reduce a candidate's suitability.
-- **Protect personal data:** Resumes contain personal information. Keep input files and generated reports private, exclude `.env` and local outputs from version control, and share reports only with authorized reviewers.
-- **Keep a human in the loop:** Scores can reflect parsing errors or incomplete evidence. Review resumes before making hiring decisions.
+- Eligibility stays deterministic, and malformed LLM output is rejected with a safe fallback.
+- Each resume failure is recorded and the rest of the batch continues.
+- Scores, penalties and evidence are stored separately so scoring can be audited.
+- A missing, private or inaccessible GitHub profile does not lower a candidate's suitability.
+- Resumes contain personal data. Keep inputs and reports private, keep `.env` and local outputs out of version control, and share reports only with authorized reviewers.
+- Scores can reflect parsing errors or incomplete evidence, so read the resume before any hiring decision.
 
 ## Known Limitations
 
-- PDF text extraction can vary with layout and document quality.
-- Scanned PDFs may require OCR, which is not included in the baseline design.
+- PDF text extraction varies with layout and document quality.
+- Scanned PDFs need OCR, which the baseline design does not include.
 - Keyword-based extraction can miss context or match a term incorrectly.
-- LLM output can be incomplete or inconsistent and requires validation.
+- LLM output can be incomplete or inconsistent and needs validation.
 - GitHub's public API has rate limits.
-- Resume content may contain personal data and must be handled securely.
-- Screening scores are heuristic signals, not a validated measure of future job performance.
+- Scores are heuristic signals, not a validated measure of future job performance.
 
 ## Future Improvements
 
 1. Add OCR support for scanned resumes.
 2. Evaluate ranking quality against a human-labeled resume set.
-3. Add caching for GitHub and LLM responses.
-4. Improve name, skill, and project extraction with evidence-level validation.
+3. Cache GitHub and LLM responses.
+4. Improve name, skill and project extraction with evidence-level validation.
 5. Add score calibration and reviewer feedback.
 6. Track score consistency and ranking regressions in automated tests.
 7. Add duplicate-resume detection and configurable batch reports.
-
-## License
-
-MIT License, if the repository's `LICENSE` file contains the MIT license. Add a `LICENSE` file before describing the project as MIT-licensed.
-#   K A S P A R R O _ T a l e n t R a n k  
- 
